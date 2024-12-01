@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: order
+  datasource:
+    url: jdbc:mysql://localhost:3306/sparta?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: password123
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+
+server:
+  port: 19092
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
