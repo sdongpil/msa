@@ -26,7 +26,7 @@ public class OrderStockValidatorImpl implements OrderStockValidator{
 
 
     public void commit(String transactionId) {
-        productClient.commit(transactionId);
+        productClient.commitStockReservation(transactionId);
     }
 
     public Order orderInfoSave(OrderRequestDto requestDto) {
@@ -66,9 +66,10 @@ public class OrderStockValidatorImpl implements OrderStockValidator{
         prepareResults.forEach((productId, result) -> {
             if (result) {
                 try {
-                    productClient.rollbackPrepare(transactionId);
+                    productClient.rollbackStockReservation(transactionId);
                 } catch (Exception e) {
                     log.error("롤백중에 문제 발생 productId ={} ", productId);
+                    log.error("error message = {} ", e.getMessage());
                 }
             }
         });
