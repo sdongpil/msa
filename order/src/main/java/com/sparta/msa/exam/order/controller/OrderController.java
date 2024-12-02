@@ -17,10 +17,6 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
 
-//    @GetMapping("/3")
-//    public String test() {
-//        return orderService.test();
-//    }
 
     @PostMapping("/orders")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequestDto requestDto) {
