@@ -1,16 +1,17 @@
 package com.sparta.msa.exam.order.service;
 
 import com.sparta.msa.exam.order.domain.entity.order.Order;
-import com.sparta.msa.exam.order.domain.entity.order.OrderProduct;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
 import com.sparta.msa.exam.order.dto.OrderRequestDto;
 import com.sparta.msa.exam.order.dto.OrderResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -37,13 +38,12 @@ public class OrderService {
     }
 
 
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "orders",
+            key = "'orders:user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':sort:' + #pageable.sort")
+    public Page<OrderResponseDto> getOrders(Long userId, Pageable pageable) {
+        Page<Order> allByUserId = orderRepository.findAllByUserId(userId, pageable);
 
-    //    @Transactional(readOnly = true)
-    public void getOrders(Long userId) {
-        List<Order> orders = orderRepository.findAllByUserId(userId);
-        for (Order order : orders) {
-            OrderProduct orderProduct = order.getOrderProductList().get(0);
-            log.info("orderProduct ={}", orderProduct);
-        }
+        return allByUserId.map(OrderResponseDto::from);
     }
 }
