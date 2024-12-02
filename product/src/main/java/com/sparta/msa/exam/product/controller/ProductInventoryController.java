@@ -23,7 +23,7 @@ public class ProductInventoryController {
     }
 
     @PostMapping("/stock/reservation/{transactionId}/commit")
-    public void commitStockReservation(@RequestParam String transactionId) {
+    public void commitStockReservation(@PathVariable String transactionId) {
         productInventoryService.commitStockReservation(transactionId);
 
     }
