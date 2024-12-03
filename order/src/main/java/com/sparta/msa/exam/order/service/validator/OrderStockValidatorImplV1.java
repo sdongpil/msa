@@ -3,7 +3,7 @@ package com.sparta.msa.exam.order.service.validator;
 import com.sparta.msa.exam.order.domain.entity.OrderStatus;
 import com.sparta.msa.exam.order.domain.entity.order.Order;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
-import com.sparta.msa.exam.order.dto.OrderUpdateRequestDto;
+import com.sparta.msa.exam.order.dto.order.OrderUpdateRequestDto;
 import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
 import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
 import com.sparta.msa.exam.order.dto.StockReservationRequestDto;

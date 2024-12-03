@@ -1,7 +1,7 @@
 package com.sparta.msa.exam.order.service.validator;
 
 import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
-import com.sparta.msa.exam.order.dto.OrderUpdateRequestDto;
+import com.sparta.msa.exam.order.dto.order.OrderUpdateRequestDto;
 
 public interface OrderStockValidator {
     boolean commit(String transactionId);
