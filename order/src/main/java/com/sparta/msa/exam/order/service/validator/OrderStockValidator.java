@@ -9,5 +9,5 @@ public interface OrderStockValidator {
 
     void rollbackCommittedStock(String transactionId);
 
-    void redisDelete(String transactionId);
+    void deleteStockReservation(String transactionId);
 }

@@ -48,7 +48,7 @@ public class OrderStockValidatorImplV1 implements OrderStockValidator {
     }
 
     @Override
-    public void redisDelete(String transactionId) {
-        productClient.redisDelete(transactionId);
+    public void deleteStockReservation(String transactionId) {
+        productClient.deleteStockReservation(transactionId);
     }
 }
