@@ -1,4 +1,4 @@
-package com.sparta.msa.exam.order.exception;
+package com.sparta.msa.exam.product.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(OrderException.class)
-    public ResponseEntity<ErrorResponse> handleOrderException(OrderException e) {
+    @ExceptionHandler(ProductException.class)
+    public ResponseEntity<ErrorResponse> handleProductException(ProductException e) {
 
         return ResponseEntity.status(e.getErrorCode().getStatus())
                 .body(new ErrorResponse(e.getErrorCode().getMessage()));

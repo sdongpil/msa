@@ -1,4 +1,4 @@
-package com.sparta.msa.exam.order.exception;
+package com.sparta.msa.exam.product.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -11,5 +11,4 @@ public class ErrorResponse {
     public ErrorResponse(String message) {
         this.message = message;
     }
-
 }

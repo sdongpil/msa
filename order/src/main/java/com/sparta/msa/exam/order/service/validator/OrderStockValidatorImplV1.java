@@ -3,10 +3,11 @@ package com.sparta.msa.exam.order.service.validator;
 import com.sparta.msa.exam.order.domain.entity.OrderStatus;
 import com.sparta.msa.exam.order.domain.entity.order.Order;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
+import com.sparta.msa.exam.order.dto.StockReservationRequestDto;
+import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
 import com.sparta.msa.exam.order.dto.order.OrderUpdateRequestDto;
 import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
-import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
-import com.sparta.msa.exam.order.dto.StockReservationRequestDto;
+import com.sparta.msa.exam.order.exception.OrderException;
 import com.sparta.msa.exam.order.service.ProductClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.sparta.msa.exam.order.exception.ErrorCode.STOCK_RESERVATION_FAILED;
 
 @Component
 @RequiredArgsConstructor
@@ -34,7 +37,7 @@ public class OrderStockValidatorImplV1 implements OrderStockValidator {
             boolean prepareStock = productClient.prepareStockReservation(item.getProductId(), new StockReservationRequestDto(item.getQuantity(), transactionId));
 
             if (!prepareStock) {
-                throw new IllegalStateException("재고 문제 발생");
+                throw new OrderException(STOCK_RESERVATION_FAILED);
             }
         }
     }
@@ -44,7 +47,7 @@ public class OrderStockValidatorImplV1 implements OrderStockValidator {
             boolean prepareStock = productClient.prepareStockReservation(requestDto.productId(), new StockReservationRequestDto(requestDto.quantity(), transactionId));
 
             if (!prepareStock) {
-                throw new IllegalStateException("재고 문제 발생");
+                throw new OrderException(STOCK_RESERVATION_FAILED);
             }
     }
 
