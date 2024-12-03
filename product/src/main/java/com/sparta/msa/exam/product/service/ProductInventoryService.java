@@ -3,6 +3,7 @@ package com.sparta.msa.exam.product.service;
 import com.sparta.msa.exam.product.domain.entity.Product;
 import com.sparta.msa.exam.product.domain.repository.ProductRepository;
 import com.sparta.msa.exam.product.dto.StockReservationRequestDto;
+import com.sparta.msa.exam.product.exception.ProductException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+
+import static com.sparta.msa.exam.product.exception.ErrorCode.PRODUCT_NOT_FOUND;
+import static com.sparta.msa.exam.product.exception.ErrorCode.STOCK_RESERVATION_NOT_FOUND;
 
 
 @Service
@@ -25,7 +29,7 @@ public class ProductInventoryService {
         int quantity = requestDto.getQuantity();
         String transactionId = requestDto.getTransactionId();
 
-        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalStateException("상품을 찾을 수 없습니다."));
+        Product product = productRepository.findById(id).orElseThrow(() -> new ProductException(PRODUCT_NOT_FOUND));
 
         if (product.getStock() < quantity) {
             return false;
@@ -44,7 +48,7 @@ public class ProductInventoryService {
 
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
         if (entries.isEmpty()) {
-            throw new IllegalStateException("재고 예약 정보를 불러올 수 없습니다.");
+            throw new ProductException(STOCK_RESERVATION_NOT_FOUND);
         }
 
         for (Map.Entry<Object, Object> entry : entries.entrySet()) {
@@ -64,7 +68,7 @@ public class ProductInventoryService {
 
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
         if (entries.isEmpty()) {
-            throw new IllegalStateException("재고 예약 정보를 불러올 수 없습니다.");
+            throw new ProductException(STOCK_RESERVATION_NOT_FOUND);
         }
 
         for (Map.Entry<Object, Object> entry : entries.entrySet()) {

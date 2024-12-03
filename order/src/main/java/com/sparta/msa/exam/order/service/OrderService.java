@@ -8,6 +8,7 @@ import com.sparta.msa.exam.order.domain.repository.OrderRepository;
 import com.sparta.msa.exam.order.dto.order.*;
 import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
 import com.sparta.msa.exam.order.dto.orderProduct.OrderProductResponseDto;
+import com.sparta.msa.exam.order.exception.OrderException;
 import com.sparta.msa.exam.order.service.validator.OrderStockValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.sparta.msa.exam.order.exception.ErrorCode.STOCK_DECREASE_FAILED;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +94,7 @@ public class OrderService {
             // 재고 차감 커밋
             commitStockReservationResult = orderStockValidator.commit(transactionId);
             if (!commitStockReservationResult) {
-                throw new IllegalStateException("재고 차감 실패");
+                throw new OrderException(STOCK_DECREASE_FAILED);
             }
 
             // 같은 상품이면 수량,가격 수정
