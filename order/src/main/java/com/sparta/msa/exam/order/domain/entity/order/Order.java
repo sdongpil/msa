@@ -32,6 +32,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    @Column(nullable = false)
+    private String transactionId;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -45,6 +48,10 @@ public class Order {
 
     public Order(Long userId, OrderStatus orderStatus) {
         this.userId = userId;
+        this.orderStatus = orderStatus;
+    }
+
+    public void setStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 }

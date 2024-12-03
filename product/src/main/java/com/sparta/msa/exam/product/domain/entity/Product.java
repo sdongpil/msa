@@ -60,4 +60,9 @@ public class Product {
         log.info("decrease 호출");
         this.stock -= quantity;
     }
+
+    public void increase(int quantity) {
+        log.info("increase 호출");
+        this.stock += quantity;
+    }
 }
