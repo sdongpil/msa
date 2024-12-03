@@ -46,11 +46,6 @@ public class Order {
     @Column
     private LocalDateTime deletedAt;
 
-    public Order(Long userId, OrderStatus orderStatus) {
-        this.userId = userId;
-        this.orderStatus = orderStatus;
-    }
-
     public void setStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }

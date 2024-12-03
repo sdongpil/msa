@@ -3,6 +3,7 @@ package com.sparta.msa.exam.product.service;
 import com.sparta.msa.exam.product.domain.entity.Product;
 import com.sparta.msa.exam.product.domain.repository.ProductRepository;
 import com.sparta.msa.exam.product.dto.StockReservationRequestDto;
+import com.sparta.msa.exam.product.exception.ErrorCode;
 import com.sparta.msa.exam.product.exception.ProductException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,7 @@ public class ProductInventoryService {
             Long productId = Long.valueOf(entry.getKey().toString());
             int quantity = Integer.parseInt(entry.getValue().toString());
 
-            Product product = productRepository.findById(productId).orElseThrow();
+            Product product = productRepository.findById(productId).orElseThrow(() -> new ProductException(PRODUCT_NOT_FOUND));
             product.decrease(quantity);
         }
 
@@ -75,7 +76,7 @@ public class ProductInventoryService {
             Long productId = Long.valueOf(entry.getKey().toString());
             int quantity = Integer.parseInt(entry.getValue().toString());
 
-            Product product = productRepository.findById(productId).orElseThrow();
+            Product product = productRepository.findById(productId).orElseThrow(() -> new ProductException(PRODUCT_NOT_FOUND));
             product.increase(quantity);
         }
     }

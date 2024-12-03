@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     STOCK_DECREASE_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "재고 차감 실패"),
     STOCK_RESERVATION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "재고 예약 실패"),
-    ;
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND,"주문 정보를 찾을 수 없습니다." );
 
     private final HttpStatus status;
     private final String message;

@@ -12,26 +12,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     @CacheEvict(cacheNames = "productsCacheAll", allEntries = true)
     public ProductResponseDto create(ProductRequestDto requestDto) {
-        Product product = Product.toEntity(requestDto);
+        Product product = productMapper.mapToEntity(requestDto);
 
         Product save = productRepository.save(product);
 
-        return ProductResponseDto.from(save);
+        return productMapper.mapToProductResponseDto(save);
     }
 
     @Cacheable(cacheNames = "productsCacheAll", key = "'product:' + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':sort:' + #pageable.sort")
     public Page<ProductResponseDto> getProducts(Pageable pageable) {
 
-        return productRepository.findAll(pageable).map(ProductResponseDto::from);
+        return productRepository.findAll(pageable).map(productMapper::mapToProductResponseDto);
     }
 }

@@ -7,8 +7,9 @@ import com.sparta.msa.exam.order.domain.repository.OrderProductRepository;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
 import com.sparta.msa.exam.order.dto.order.*;
 import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
-import com.sparta.msa.exam.order.dto.orderProduct.OrderProductResponseDto;
+import com.sparta.msa.exam.order.exception.ErrorCode;
 import com.sparta.msa.exam.order.exception.OrderException;
+import com.sparta.msa.exam.order.service.mapper.OrderMapper;
 import com.sparta.msa.exam.order.service.validator.OrderStockValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
     private final OrderStockValidator orderStockValidator;
+    private final OrderMapper orderMapper;
 
     @Transactional
     public CreateOrderResultDto placeOrder(OrderCreateRequestDto requestDto) {
@@ -53,7 +55,7 @@ public class OrderService {
             payment();
 
             order.setStatus(OrderStatus.SUCCESS);
-            return new CreateOrderResultDto(true, OrderResponseDto.from(order));
+            return new CreateOrderResultDto(true, orderMapper.toResponseDto(order));
         } catch (Exception e) {
             log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
             if (order != null) {
@@ -77,13 +79,13 @@ public class OrderService {
     public Page<OrderResponseDto> getOrders(Long userId, Pageable pageable) {
         Page<Order> allByUserId = orderRepository.findAllByUserId(userId, pageable);
 
-        return allByUserId.map(OrderResponseDto::from);
+        return allByUserId.map(orderMapper::toResponseDto);
     }
 
     @Transactional
     public UpdateOrderResultDto updateOrder(Long orderId, OrderUpdateRequestDto requestDto) {
         String transactionId = UUID.randomUUID().toString();
-        Order order = orderRepository.findById(orderId).orElseThrow();
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderException(ErrorCode.ORDER_NOT_FOUND));
         OrderProduct orderProduct = null;
         boolean commitStockReservationResult = false;
 
@@ -104,7 +106,7 @@ public class OrderService {
             // 상품 추가
             orderProduct = addOrderProduct(requestDto, order);
 
-            return new UpdateOrderResultDto(true, OrderProductResponseDto.from(orderProduct));
+            return new UpdateOrderResultDto(true, orderMapper.mapToOrderProductResponseDto(orderProduct));
         } catch (Exception e) {
             log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
             handlingOrderFailure(commitStockReservationResult, transactionId);
@@ -119,14 +121,7 @@ public class OrderService {
     }
 
     private OrderProduct addOrderProduct(OrderUpdateRequestDto requestDto, Order order) {
-        OrderProduct orderProduct;
-        orderProduct = orderProductRepository.save(OrderProduct.builder()
-                .order(order)
-                .productId(requestDto.productId())
-                .quantity(requestDto.quantity())
-                .totalPrice(requestDto.price() * requestDto.quantity())
-                .build());
-        return orderProduct;
+        return orderProductRepository.save(orderMapper.mapToOrderProduct(order, requestDto));
     }
 
     private UpdateOrderResultDto updateOrderProduct(OrderUpdateRequestDto requestDto, Order order) {
@@ -134,7 +129,7 @@ public class OrderService {
         for (OrderProduct item : orderProductList) {
             if (Objects.equals(item.getProductId(), requestDto.productId())) {
                 item.updateOrderProductInfo(requestDto.quantity(), requestDto.price());
-                return new UpdateOrderResultDto(true, OrderProductResponseDto.from(item));
+                return new UpdateOrderResultDto(true, orderMapper.mapToOrderProductResponseDto(item));
             }
         }
         return null;
@@ -155,22 +150,12 @@ public class OrderService {
         List<OrderProductInfoDto> orderProductInfoDtoList = requestDto.orderProductList();
 
         for (OrderProductInfoDto item : orderProductInfoDtoList) {
-            orderProductRepository.save(OrderProduct.builder()
-                    .order(order)
-                    .productId(item.getProductId())
-                    .quantity(item.getQuantity())
-                    .totalPrice(item.getPrice() * item.getQuantity())
-                    .build());
+            orderProductRepository.save(orderMapper.mapToOrderProduct(order, item));
         }
     }
 
     private Order createOrder(OrderCreateRequestDto requestDto, String transactionId) {
-        return orderRepository.save(
-                Order.builder()
-                        .userId(requestDto.userId())
-                        .orderStatus(OrderStatus.PENDING)
-                        .transactionId(transactionId).build()
-        );
+        return orderRepository.save(orderMapper.mapToOrder(requestDto, transactionId));
     }
 
     private void payment() {

@@ -22,7 +22,7 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(authService.createAccessToken(requestDto)));
     }
 
-    @PostMapping("/auth/sign-up")
+    @PostMapping("/auth/signUp")
     public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDto requestDto){
         UserCreateResponseDto responseDto = authService.createUser(requestDto);
 
