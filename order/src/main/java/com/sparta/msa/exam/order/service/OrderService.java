@@ -30,6 +30,8 @@ public class OrderService {
 
         // 주문 정보 저장
         Order order = orderStockValidator.orderInfoSave(requestDto);
+            // 주문 저장
+            Order order = createOrder(requestDto, transactionId);
 
         // 재고 차감 커밋
         orderStockValidator.commit(transactionId);
@@ -45,5 +47,13 @@ public class OrderService {
         Page<Order> allByUserId = orderRepository.findAllByUserId(userId, pageable);
 
         return allByUserId.map(OrderResponseDto::from);
+    }
+    private Order createOrder(OrderRequestDto requestDto, String transactionId) {
+        return orderRepository.save(
+                Order.builder()
+                        .userId(requestDto.userId())
+                        .orderStatus(OrderStatus.PENDING)
+                        .transactionId(transactionId).build()
+        );
     }
 }

@@ -32,6 +32,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    @Column(nullable = false)
+    private String transactionId;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
