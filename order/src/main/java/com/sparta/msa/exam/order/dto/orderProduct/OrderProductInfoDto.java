@@ -1,4 +1,4 @@
-package com.sparta.msa.exam.order.dto;
+package com.sparta.msa.exam.order.dto.orderProduct;
 
 import lombok.Getter;
 
