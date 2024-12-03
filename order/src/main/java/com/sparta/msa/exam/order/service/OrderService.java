@@ -35,6 +35,7 @@ public class OrderService {
 
         // 재고 차감 커밋
         orderStockValidator.commit(transactionId);
+            order.setStatus(OrderStatus.SUCCESS);
 
         return OrderResponseDto.from(order);
     }

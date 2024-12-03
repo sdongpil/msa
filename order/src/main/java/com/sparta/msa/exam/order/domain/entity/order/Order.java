@@ -50,4 +50,8 @@ public class Order {
         this.userId = userId;
         this.orderStatus = orderStatus;
     }
+
+    public void setStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 }
