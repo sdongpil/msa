@@ -23,7 +23,11 @@ public class OrderStockValidatorImplV1 implements OrderStockValidator {
 
     @Override
     public boolean commit(String transactionId) {
-        return productClient.commitStockReservation(transactionId);
+        boolean result = productClient.commitStockReservation(transactionId);
+
+        Order order = orderRepository.findByTransactionId(transactionId);
+        order.setStatus(OrderStatus.SUCCESS);
+        return result;
     }
 
     @Override

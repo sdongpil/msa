@@ -5,6 +5,7 @@ import com.sparta.msa.exam.order.domain.entity.order.Order;
 import com.sparta.msa.exam.order.domain.entity.order.OrderProduct;
 import com.sparta.msa.exam.order.domain.repository.OrderProductRepository;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
+import com.sparta.msa.exam.order.dto.CreateOrderResultDto;
 import com.sparta.msa.exam.order.dto.OrderProductInfoDto;
 import com.sparta.msa.exam.order.dto.OrderRequestDto;
 import com.sparta.msa.exam.order.dto.OrderResponseDto;
@@ -29,15 +30,16 @@ public class OrderService {
     private final OrderStockValidator orderStockValidator;
 
     @Transactional
-    public OrderResponseDto placeOrder(OrderRequestDto requestDto) {
+    public CreateOrderResultDto placeOrder(OrderRequestDto requestDto) {
         String transactionId = UUID.randomUUID().toString();
         boolean commitStockReservationResult = false;
+        Order order = null;
         try {
             //재고 수량 확인 준비
             orderStockValidator.reserveProductStocks(requestDto, transactionId);
 
             // 주문 저장
-            Order order = createOrder(requestDto, transactionId);
+            order = createOrder(requestDto, transactionId);
 
             // 주문 상품 저장
             createOrderProduct(order, requestDto);
@@ -45,21 +47,35 @@ public class OrderService {
             // 재고 차감 커밋
             commitStockReservationResult = orderStockValidator.commit(transactionId);
 
-            //결제 로직 등등
             payment();
 
-            order.setStatus(OrderStatus.SUCCESS);
-
-            return OrderResponseDto.from(order);
+            return new CreateOrderResultDto(true , OrderResponseDto.from(order));
         } catch (Exception e) {
-            if (commitStockReservationResult) {
-                orderStockValidator.rollbackCommittedStock(transactionId);
-            }
-            log.error("error message = {}", e.getMessage());
+            log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
+
+            handlingOrderFailure(order, commitStockReservationResult, transactionId);
         } finally {
-            orderStockValidator.deleteStockReservation(transactionId);
+            try {
+                orderStockValidator.deleteStockReservation(transactionId);
+            } catch (Exception e) {
+                log.error("재고 예약 정보 삭제 실패 deleteStockReservation() transactionId: {}", transactionId);
+            }
         }
-        return null;
+        return new CreateOrderResultDto(false, null);
+    }
+
+    private void handlingOrderFailure(Order order, boolean commitStockReservationResult, String transactionId) {
+        if (order != null) {
+            order.setStatus(OrderStatus.FAIL);
+        }
+
+        if (commitStockReservationResult) {
+            try {
+                orderStockValidator.rollbackCommittedStock(transactionId);
+            } catch (Exception ex) {
+                log.error("재고 롤백 실패 rollbackCommittedStock() transactionId: {}", transactionId);
+            }
+        }
     }
 
     @Transactional(readOnly = true)

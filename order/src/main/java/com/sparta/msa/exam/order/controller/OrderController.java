@@ -1,13 +1,13 @@
 package com.sparta.msa.exam.order.controller;
 
-import com.sparta.msa.exam.order.domain.entity.order.Order;
-import com.sparta.msa.exam.order.domain.repository.OrderRepository;
+import com.sparta.msa.exam.order.dto.CreateOrderResultDto;
 import com.sparta.msa.exam.order.dto.OrderRequestDto;
 import com.sparta.msa.exam.order.dto.OrderResponseDto;
 import com.sparta.msa.exam.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
-    private final OrderRepository orderRepository;
-
 
     @PostMapping("/orders")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequestDto requestDto) {
+        CreateOrderResultDto response = orderService.placeOrder(requestDto);
 
-       OrderResponseDto responseDto = orderService.placeOrder(requestDto);
-        return ResponseEntity.ok(responseDto);
+        return response.success() ?
+                ResponseEntity.ok(response.orderResponseDto()) :
+                ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("잠시 후에 주문 추가를 요청 해주세요");
     }
 
     @GetMapping("/orders")
@@ -30,12 +30,5 @@ public class OrderController {
         Page<OrderResponseDto> responseDtoList = orderService.getOrders(userId, pageable);
 
         return ResponseEntity.ok(responseDtoList);
-    }
-
-    @GetMapping("/orders/osiv")
-    public void osivTest(@RequestParam Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow();
-        System.out.println("getOrderProductList = " + order.getOrderProductList().get(0));
-
     }
 }

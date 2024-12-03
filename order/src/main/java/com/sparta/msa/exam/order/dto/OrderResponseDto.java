@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 public class OrderResponseDto {
     private Long orderId;
+    private Long userId;
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
@@ -25,6 +26,7 @@ public class OrderResponseDto {
     public static OrderResponseDto from(Order order) {
         return OrderResponseDto.builder()
                 .orderId(order.getId())
+                .userId(order.getUserId())
                 .createdAt(order.getCreatedAt())
                 .orderStatus(order.getOrderStatus())
                 .build();
