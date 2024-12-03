@@ -19,7 +19,7 @@ public class AuthConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         // /auth/signIn 경로에 대한 접근을 허용합니다. 이 경로는 인증 없이 접근할 수 있습니다.
-                        .requestMatchers("/auth/signIn").permitAll()
+                        .requestMatchers("/auth/signIn","/auth/sign-up").permitAll()
                         // 그 외의 모든 요청은 인증이 필요합니다.
                         .anyRequest().authenticated()
                 )
