@@ -1,4 +1,4 @@
-package com.sparta.msa.exam.order.dto;
+package com.sparta.msa.exam.order.dto.order;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

@@ -1,5 +1,4 @@
 package com.sparta.msa.exam.order.domain.entity.order;
-import com.sparta.msa.exam.order.domain.entity.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,4 +29,8 @@ public class OrderProduct {
     @Column(nullable = false)
     private int totalPrice;
 
+    public void updateOrderProductInfo(int quantity, int price) {
+        this.quantity = quantity;
+        this.totalPrice = quantity * price;
+    }
 }
