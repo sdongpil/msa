@@ -1,6 +1,8 @@
 spring:
   application:
     name: server
+  profiles:
+    active: dev
 
 server:
   port: 19090
@@ -13,3 +15,24 @@ eureka:
       defaultZone: http://localhost:19090/eureka/
   instance:
     hostname: localhost
+
+
+---
+# Prod 환경 설정
+spring:
+  application:
+    name: server
+  profiles:
+    active: prod
+
+server:
+  port:
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone:
+  instance:
+    hostname:
