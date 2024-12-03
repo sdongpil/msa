@@ -17,14 +17,18 @@ public class ProductInventoryController {
         return productInventoryService.prepareStockReservation(id, requestDto);
     }
 
-    @PostMapping("/stock/reservation/{transactionId}/rollback")
-    public void rollbackStockReservation(@PathVariable String transactionId){
-        productInventoryService.rollbackStockReservation(transactionId);
+    @PostMapping("/stock/reservation/{transactionId}/commit")
+    public boolean commitStockReservation(@PathVariable String transactionId) {
+        return productInventoryService.commitStockReservation(transactionId);
     }
 
-    @PostMapping("/stock/reservation/{transactionId}/commit")
-    public void commitStockReservation(@PathVariable String transactionId) {
-        productInventoryService.commitStockReservation(transactionId);
+    @PostMapping("/stock/commit/{transactionId}/rollback")
+    public void rollbackCommittedStock(@PathVariable String transactionId) {
+        productInventoryService.rollbackCommittedStock(transactionId);
+    }
 
+    @DeleteMapping("/stock/reservation/{transactionId}")
+    public void redisDelete(@PathVariable String transactionId) {
+        productInventoryService.deleteStockReservation(transactionId);
     }
 }
