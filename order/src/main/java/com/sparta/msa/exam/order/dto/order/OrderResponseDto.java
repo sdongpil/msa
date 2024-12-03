@@ -22,15 +22,6 @@ public class OrderResponseDto {
     @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     private OrderStatus orderStatus;
-
-    public static OrderResponseDto from(Order order) {
-        return OrderResponseDto.builder()
-                .orderId(order.getId())
-                .userId(order.getUserId())
-                .createdAt(order.getCreatedAt())
-                .orderStatus(order.getOrderStatus())
-                .build();
-    }
 }
 
 

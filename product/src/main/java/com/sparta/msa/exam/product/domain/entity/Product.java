@@ -47,22 +47,11 @@ public class Product {
     @Column
     private LocalDateTime deletedAt;
 
-    public static Product toEntity(ProductRequestDto requestDto) {
-        return Product.builder()
-                .name(requestDto.name())
-                .supplyPrice(requestDto.supplyPrice())
-                .stock(requestDto.stock())
-                .productStatus(requestDto.productStatus())
-                .build();
-    }
-
     public void decrease(int quantity) {
-        log.info("decrease 호출");
         this.stock -= quantity;
     }
 
     public void increase(int quantity) {
-        log.info("increase 호출");
         this.stock += quantity;
     }
 }

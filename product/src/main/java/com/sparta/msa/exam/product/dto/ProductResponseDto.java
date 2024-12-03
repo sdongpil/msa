@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.sparta.msa.exam.product.domain.ProductStatus;
-import com.sparta.msa.exam.product.domain.entity.Product;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -22,16 +21,5 @@ public record ProductResponseDto(Long id,
                                  @JsonFormat(shape= JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
                                  LocalDateTime createdAt
 ) {
-
-    public static ProductResponseDto from(Product product) {
-        return new ProductResponseDto(
-                product.getId(),
-                product.getName(),
-                product.getSupplyPrice(),
-                product.getProductStatus(),
-                product.getStock(),
-                product.getCreatedAt()
-        );
-    }
 }
 
