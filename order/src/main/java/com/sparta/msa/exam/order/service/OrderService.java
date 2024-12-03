@@ -5,10 +5,12 @@ import com.sparta.msa.exam.order.domain.entity.order.Order;
 import com.sparta.msa.exam.order.domain.entity.order.OrderProduct;
 import com.sparta.msa.exam.order.domain.repository.OrderProductRepository;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
-import com.sparta.msa.exam.order.dto.CreateOrderResultDto;
-import com.sparta.msa.exam.order.dto.OrderProductInfoDto;
-import com.sparta.msa.exam.order.dto.OrderRequestDto;
-import com.sparta.msa.exam.order.dto.OrderResponseDto;
+import com.sparta.msa.exam.order.dto.*;
+import com.sparta.msa.exam.order.dto.order.CreateOrderResultDto;
+import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
+import com.sparta.msa.exam.order.dto.order.OrderResponseDto;
+import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
+import com.sparta.msa.exam.order.dto.orderProduct.UpdateOrderResultDto;
 import com.sparta.msa.exam.order.service.validator.OrderStockValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -30,7 +33,7 @@ public class OrderService {
     private final OrderStockValidator orderStockValidator;
 
     @Transactional
-    public CreateOrderResultDto placeOrder(OrderRequestDto requestDto) {
+    public CreateOrderResultDto placeOrder(OrderCreateRequestDto requestDto) {
         String transactionId = UUID.randomUUID().toString();
         boolean commitStockReservationResult = false;
         Order order = null;
@@ -49,11 +52,15 @@ public class OrderService {
 
             payment();
 
-            return new CreateOrderResultDto(true , OrderResponseDto.from(order));
+            order.setStatus(OrderStatus.SUCCESS);
+            return new CreateOrderResultDto(true, OrderResponseDto.from(order));
         } catch (Exception e) {
             log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
+            if (order != null) {
+                order.setStatus(OrderStatus.FAIL);
+            }
 
-            handlingOrderFailure(order, commitStockReservationResult, transactionId);
+            handlingOrderFailure(commitStockReservationResult, transactionId);
         } finally {
             try {
                 orderStockValidator.deleteStockReservation(transactionId);
@@ -62,20 +69,6 @@ public class OrderService {
             }
         }
         return new CreateOrderResultDto(false, null);
-    }
-
-    private void handlingOrderFailure(Order order, boolean commitStockReservationResult, String transactionId) {
-        if (order != null) {
-            order.setStatus(OrderStatus.FAIL);
-        }
-
-        if (commitStockReservationResult) {
-            try {
-                orderStockValidator.rollbackCommittedStock(transactionId);
-            } catch (Exception ex) {
-                log.error("재고 롤백 실패 rollbackCommittedStock() transactionId: {}", transactionId);
-            }
-        }
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +80,78 @@ public class OrderService {
         return allByUserId.map(OrderResponseDto::from);
     }
 
-    private void createOrderProduct(Order order, OrderRequestDto requestDto) {
+    @Transactional
+    public UpdateOrderResultDto updateOrder(Long orderId, OrderUpdateRequestDto requestDto) {
+        String transactionId = UUID.randomUUID().toString();
+        Order order = orderRepository.findById(orderId).orElseThrow();
+        OrderProduct orderProduct = null;
+        boolean commitStockReservationResult = false;
+
+        try {
+            //재고 수량 확인 준비
+            orderStockValidator.reserveProductStocks(requestDto, transactionId);
+
+            // 재고 차감 커밋
+            commitStockReservationResult = orderStockValidator.commit(transactionId);
+            if (!commitStockReservationResult) {
+                throw new IllegalStateException("재고 차감 실패");
+            }
+
+            // 같은 상품이면 수량,가격 수정
+            UpdateOrderResultDto item = updateOrderProduct(requestDto, order);
+            if (item != null) return item;
+
+            // 상품 추가
+            orderProduct = addOrderProduct(requestDto, order);
+
+            return new UpdateOrderResultDto(true, OrderProductResponseDto.from(orderProduct));
+        } catch (Exception e) {
+            log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
+            handlingOrderFailure(commitStockReservationResult, transactionId);
+        } finally {
+            try {
+                orderStockValidator.deleteStockReservation(transactionId);
+            } catch (Exception e) {
+                log.error("재고 예약 정보 삭제 실패 deleteStockReservation() transactionId: {}", transactionId);
+            }
+        }
+        return new UpdateOrderResultDto(false, null);
+    }
+
+    private OrderProduct addOrderProduct(OrderUpdateRequestDto requestDto, Order order) {
+        OrderProduct orderProduct;
+        orderProduct = orderProductRepository.save(OrderProduct.builder()
+                .order(order)
+                .productId(requestDto.productId())
+                .quantity(requestDto.quantity())
+                .totalPrice(requestDto.price() * requestDto.quantity())
+                .build());
+        return orderProduct;
+    }
+
+    private UpdateOrderResultDto updateOrderProduct(OrderUpdateRequestDto requestDto, Order order) {
+        List<OrderProduct> orderProductList = orderProductRepository.findByOrderId(order.getId());
+        for (OrderProduct item : orderProductList) {
+            if (Objects.equals(item.getProductId(), requestDto.productId())) {
+                item.updateOrderProductInfo(requestDto.quantity(), requestDto.price());
+                return new UpdateOrderResultDto(true, OrderProductResponseDto.from(item));
+            }
+        }
+        return null;
+    }
+
+    private void handlingOrderFailure(boolean commitStockReservationResult, String transactionId) {
+
+        if (commitStockReservationResult) {
+            try {
+                orderStockValidator.rollbackCommittedStock(transactionId);
+            } catch (Exception ex) {
+                log.error("재고 롤백 실패 rollbackCommittedStock() transactionId: {}", transactionId);
+            }
+        }
+    }
+
+    private void createOrderProduct(Order order, OrderCreateRequestDto requestDto) {
         List<OrderProductInfoDto> orderProductInfoDtoList = requestDto.orderProductList();
 
         for (OrderProductInfoDto item : orderProductInfoDtoList) {
@@ -100,7 +164,7 @@ public class OrderService {
         }
     }
 
-    private Order createOrder(OrderRequestDto requestDto, String transactionId) {
+    private Order createOrder(OrderCreateRequestDto requestDto, String transactionId) {
         return orderRepository.save(
                 Order.builder()
                         .userId(requestDto.userId())

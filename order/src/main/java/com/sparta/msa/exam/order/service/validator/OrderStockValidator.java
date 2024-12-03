@@ -1,11 +1,14 @@
 package com.sparta.msa.exam.order.service.validator;
 
-import com.sparta.msa.exam.order.dto.OrderRequestDto;
+import com.sparta.msa.exam.order.dto.order.OrderCreateRequestDto;
+import com.sparta.msa.exam.order.dto.OrderUpdateRequestDto;
 
 public interface OrderStockValidator {
     boolean commit(String transactionId);
 
-    void reserveProductStocks(OrderRequestDto requestDto, String transactionId);
+    void reserveProductStocks(OrderCreateRequestDto requestDto, String transactionId);
+
+    void reserveProductStocks(OrderUpdateRequestDto requestDto, String transactionId);
 
     void rollbackCommittedStock(String transactionId);
 
