@@ -13,8 +13,7 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
     open-in-view: false
-  profiles:
-    active: dev
+
 
 eureka:
   client:
@@ -28,38 +27,3 @@ service:
 
 server:
   port: 19095
-
----
-spring:
-  application:
-    name: auth-service
-  profiles:
-    active: prod
-
-  datasource:
-    url:
-    username:
-    password:
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-    show-sql: false
-    open-in-view: false
-
-
-eureka:
-  client:
-    service-url:
-      defaultZone:
-
-service:
-  jwt:
-    access-expiration: 3600000
-    secret-key:
-
-server:
-  port: 8082
