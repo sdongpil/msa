@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.sparta.msa.exam.order.exception.ErrorCode.ORDER_NOT_FOUND;
 import static com.sparta.msa.exam.order.exception.ErrorCode.STOCK_RESERVATION_FAILED;
 
 @Component
@@ -56,7 +57,7 @@ public class OrderStockValidatorImplV1 implements OrderStockValidator {
     public void rollbackCommittedStock(String transactionId) {
         productClient.rollbackCommittedStock(transactionId);
 
-        Order order = orderRepository.findByTransactionId(transactionId);
+        Order order = orderRepository.findByTransactionId(transactionId).orElseThrow(() -> new OrderException(ORDER_NOT_FOUND));
         order.setStatus(OrderStatus.FAIL);
     }
 
