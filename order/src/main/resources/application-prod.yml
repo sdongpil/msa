@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: order
+  datasource:
+    url:
+    username:
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    open-in-view: false
+
+
+
+server:
+  port:
+
+eureka:
+  client:
+    service-url:
+      defaultZone:
+
+management:
+  zipkin:
+    tracing:
+      endpoint:
+  tracing:
+    sampling:
+      probability: 1.0
+
