@@ -3,11 +3,12 @@ package com.sparta.msa.exam.order.controller;
 import com.sparta.msa.exam.order.dto.order.*;
 import com.sparta.msa.exam.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class OrderController {
 
     @GetMapping("/orders")
     public ResponseEntity<?> getOrders(@RequestParam Long userId, Pageable pageable) {
-        Page<OrderResponseDto> responseDtoList = orderService.getOrders(userId, pageable);
+        List<OrderResponseDto> responseDtoList = orderService.getOrders(userId, pageable);
 
         return ResponseEntity.ok(responseDtoList);
     }
