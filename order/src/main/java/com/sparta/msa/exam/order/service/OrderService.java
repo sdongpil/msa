@@ -75,11 +75,11 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = "orders",
-            key = "'orders:user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':sort:' + #pageable.sort")
-    public Page<OrderResponseDto> getOrders(Long userId, Pageable pageable) {
+            key = "'orders:user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':sort:' + #pageable.sort", cacheManager = "orderCacheManager")
+    public List<OrderResponseDto> getOrders(Long userId, Pageable pageable) {
         Page<Order> allByUserId = orderRepository.findAllByUserId(userId, pageable);
 
-        return allByUserId.map(orderMapper::toResponseDto);
+        return allByUserId.map(orderMapper::toResponseDto).getContent();
     }
 
     @Transactional
