@@ -1,12 +1,11 @@
 package com.sparta.msa.exam.order.service;
 
-import com.sparta.msa.exam.order.domain.entity.OrderStatus;
 import com.sparta.msa.exam.order.domain.entity.order.Order;
 import com.sparta.msa.exam.order.domain.entity.order.OrderProduct;
 import com.sparta.msa.exam.order.domain.repository.OrderProductRepository;
 import com.sparta.msa.exam.order.domain.repository.OrderRepository;
+import com.sparta.msa.exam.order.dto.CommitResponseDto;
 import com.sparta.msa.exam.order.dto.order.*;
-import com.sparta.msa.exam.order.dto.orderProduct.OrderProductInfoDto;
 import com.sparta.msa.exam.order.exception.ErrorCode;
 import com.sparta.msa.exam.order.exception.OrderException;
 import com.sparta.msa.exam.order.service.mapper.OrderMapper;
@@ -33,36 +32,25 @@ public class OrderService {
     private final OrderProductRepository orderProductRepository;
     private final OrderStockValidator orderStockValidator;
     private final OrderMapper orderMapper;
+    private final TransactionCoordinator transactionCoordinator;
 
     @Transactional
     public CreateOrderResultDto placeOrder(OrderCreateRequestDto requestDto) {
         String transactionId = UUID.randomUUID().toString();
         boolean commitStockReservationResult = false;
-        Order order = null;
+
         try {
-            //재고 수량 확인 준비
-            orderStockValidator.reserveProductStocks(requestDto, transactionId);
+            transactionCoordinator.prepare(requestDto, transactionId);
 
-            // 주문 저장
-            order = createOrder(requestDto, transactionId);
+            CommitResponseDto commitResult = transactionCoordinator.commit(requestDto, transactionId);
+            commitStockReservationResult = commitResult.commitStockReservationResult();
 
-            // 주문 상품 저장
-            createOrderProduct(order, requestDto);
-
-            // 재고 차감 커밋
-            commitStockReservationResult = orderStockValidator.commit(transactionId);
-
-            payment();
-
-            order.setStatus(OrderStatus.SUCCESS);
-            return new CreateOrderResultDto(true, orderMapper.toResponseDto(order));
+            return new CreateOrderResultDto(true, orderMapper.toResponseDto(commitResult.order()));
         } catch (Exception e) {
             log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
-            if (order != null) {
-                order.setStatus(OrderStatus.FAIL);
-            }
+            transactionCoordinator.rollback(commitStockReservationResult, transactionId);
 
-            handlingOrderFailure(commitStockReservationResult, transactionId);
+            return new CreateOrderResultDto(false, null);
         } finally {
             try {
                 orderStockValidator.deleteStockReservation(transactionId);
@@ -70,7 +58,6 @@ public class OrderService {
                 log.error("재고 예약 정보 삭제 실패 deleteStockReservation() transactionId: {}", transactionId);
             }
         }
-        return new CreateOrderResultDto(false, null);
     }
 
     @Transactional(readOnly = true)
@@ -108,8 +95,8 @@ public class OrderService {
 
             return new UpdateOrderResultDto(true, orderMapper.mapToOrderProductResponseDto(orderProduct));
         } catch (Exception e) {
-            log.error("주문 실패 placeOrder() error message = {}", e.getMessage());
-            handlingOrderFailure(commitStockReservationResult, transactionId);
+            log.error("주문 실패 updateOrder() error message = {}", e.getMessage());
+            transactionCoordinator.rollbackV2(commitStockReservationResult, transactionId);
         } finally {
             try {
                 orderStockValidator.deleteStockReservation(transactionId);
@@ -133,33 +120,5 @@ public class OrderService {
             }
         }
         return null;
-    }
-
-    private void handlingOrderFailure(boolean commitStockReservationResult, String transactionId) {
-
-        if (commitStockReservationResult) {
-            try {
-                orderStockValidator.rollbackCommittedStock(transactionId);
-            } catch (Exception ex) {
-                log.error("재고 롤백 실패 rollbackCommittedStock() transactionId: {}", transactionId);
-            }
-        }
-    }
-
-    private void createOrderProduct(Order order, OrderCreateRequestDto requestDto) {
-        List<OrderProductInfoDto> orderProductInfoDtoList = requestDto.orderProductList();
-
-        for (OrderProductInfoDto item : orderProductInfoDtoList) {
-            orderProductRepository.save(orderMapper.mapToOrderProduct(order, item));
-        }
-    }
-
-    private Order createOrder(OrderCreateRequestDto requestDto, String transactionId) {
-        return orderRepository.save(orderMapper.mapToOrder(requestDto, transactionId));
-    }
-
-    private void payment() {
-        log.info("결제 성공");
-//        throw new IllegalStateException("결제 에러");
     }
 }

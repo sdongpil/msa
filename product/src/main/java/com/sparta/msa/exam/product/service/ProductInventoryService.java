@@ -3,7 +3,6 @@ package com.sparta.msa.exam.product.service;
 import com.sparta.msa.exam.product.domain.entity.Product;
 import com.sparta.msa.exam.product.domain.repository.ProductRepository;
 import com.sparta.msa.exam.product.dto.StockReservationRequestDto;
-import com.sparta.msa.exam.product.exception.ErrorCode;
 import com.sparta.msa.exam.product.exception.ProductException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +37,6 @@ public class ProductInventoryService {
 
         String key = STOCK_RESERVATION + transactionId;
         redisTemplate.opsForHash().put(key, id.toString(), String.valueOf(quantity));
-
         return true;
     }
 
